@@ -6,6 +6,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://driftwatch-api.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
