@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { useAuth } from "./AuthContext";
 import Layout from "./components/Layout";
 import LoginPage from "./pages/LoginPage";
@@ -52,6 +53,7 @@ export default function App() {
           }
         />
       </Routes>
+      <SpeedInsights />
     </AuthProvider>
   );
 }
