@@ -1,0 +1,91 @@
+databases:
+  - name: driftwatch-db
+    plan: starter
+    databaseName: driftwatch
+    user: driftwatch
+    ipAllowList: []
+
+envVarGroups:
+  # Set SECRET_KEY in the Render dashboard before the first production deploy.
+  - name: driftwatch-shared-secrets
+    envVars:
+      - key: SECRET_KEY
+        sync: false
+
+services:
+  - type: web
+    name: driftwatch-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    healthCheckPath: /api/health
+    preDeployCommand: python -m pip install -r backend/requirements.txt && cd backend && alembic upgrade head
+    envVars:
+      - fromGroup: driftwatch-shared-secrets
+      - key: DATABASE_URL
+        fromDatabase:
+          name: driftwatch-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: driftwatch-redis
+          type: kvs
+          property: connectionString
+      - key: AUTO_CREATE_SCHEMA
+        value: "false"
+      - key: ENABLE_INLINE_SCHEDULER
+        value: "false"
+      - key: CORS_ORIGINS
+        value: '["https://driftwatch.vercel.app"]'
+      - key: ENVIRONMENT
+        value: production
+
+  - type: worker
+    name: driftwatch-worker
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    dockerCommand: celery -A worker.runner.celery_app worker --loglevel=info --concurrency=2
+    envVars:
+      - fromGroup: driftwatch-shared-secrets
+      - key: DATABASE_URL
+        fromDatabase:
+          name: driftwatch-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: driftwatch-redis
+          type: kvs
+          property: connectionString
+      - key: AUTO_CREATE_SCHEMA
+        value: "false"
+
+  - type: cron
+    name: driftwatch-scheduler
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    schedule: "*/5 * * * *"
+    dockerCommand: python -m app.scheduler_cron
+    envVars:
+      - fromGroup: driftwatch-shared-secrets
+      - key: DATABASE_URL
+        fromDatabase:
+          name: driftwatch-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: driftwatch-redis
+          type: kvs
+          property: connectionString
+      - key: AUTO_CREATE_SCHEMA
+        value: "false"
+
+kvs:
+  - name: driftwatch-redis
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []

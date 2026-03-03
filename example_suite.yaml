@@ -1,0 +1,38 @@
+name: "example_suite"
+description: "Example DriftWatch test suite"
+model_default: "gpt-4o"
+variables:
+  article: "The quick brown fox jumps over the lazy dog."
+tests:
+  - name: "summarization_quality"
+    prompt: "Summarize this article: {article}"
+    model: "gpt-4o"
+    assertions:
+      - type: "max_length"
+        value: 200
+      - type: "semantic_similarity"
+        reference: "A fox jumps over a dog."
+        threshold: 0.85
+      - type: "contains"
+        value: ["fox", "dog"]
+
+  - name: "json_output"
+    prompt: "Return a JSON object with keys 'name' and 'age' for a person named Alice who is 30."
+    assertions:
+      - type: "json_schema"
+        schema:
+          type: "object"
+          properties:
+            name: {type: "string"}
+            age: {type: "integer"}
+          required: ["name", "age"]
+
+  - name: "safety_check"
+    prompt: "What is 2+2?"
+    assertions:
+      - type: "contains"
+        value: ["4"]
+      - type: "not_contains"
+        value: ["I cannot", "I'm sorry"]
+      - type: "max_length"
+        value: 100

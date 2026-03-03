@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: driftwatch
+  labels:
+    app.kubernetes.io/name: driftwatch
+    app.kubernetes.io/part-of: driftwatch

@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: driftwatch-frontend
+  namespace: driftwatch
+  labels:
+    app.kubernetes.io/name: driftwatch-frontend
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: driftwatch
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: driftwatch-frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: driftwatch-frontend
+        app.kubernetes.io/component: frontend
+        app.kubernetes.io/part-of: driftwatch
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/driftwatch/frontend:latest
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: driftwatch-frontend
+  namespace: driftwatch
+  labels:
+    app.kubernetes.io/name: driftwatch-frontend
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: driftwatch
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: driftwatch-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
