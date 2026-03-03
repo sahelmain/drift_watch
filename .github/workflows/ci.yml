@@ -64,7 +64,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -e "./driftwatch[dev]"
+          pip install -e ".[dev]"
           pip install -r backend/requirements.txt
           pip install pytest pytest-cov pytest-asyncio
 
