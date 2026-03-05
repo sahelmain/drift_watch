@@ -8,9 +8,16 @@ import {
   Loader2,
   FlaskConical,
   Clock,
+  Play,
 } from "lucide-react";
 import { format } from "date-fns";
-import { getSuites, createSuite, updateSuite, deleteSuite } from "@/api";
+import {
+  getSuites,
+  createSuite,
+  updateSuite,
+  deleteSuite,
+  triggerRun,
+} from "@/api";
 import type { Suite } from "@/types";
 
 export default function SuitesPage() {
@@ -23,6 +30,8 @@ export default function SuitesPage() {
   const [formYaml, setFormYaml] = useState("");
   const [formSchedule, setFormSchedule] = useState("");
   const [saving, setSaving] = useState(false);
+  const [runningSuiteId, setRunningSuiteId] = useState<string | null>(null);
+  const [runError, setRunError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -92,6 +101,22 @@ export default function SuitesPage() {
     }
   }
 
+  async function handleRun(id: string) {
+    if (runningSuiteId === id) return;
+    setRunError(null);
+    setRunningSuiteId(id);
+    try {
+      const run = await triggerRun(id);
+      navigate(`/runs/${run.id}`);
+    } catch (error) {
+      setRunError(
+        error instanceof Error ? error.message : "Unable to start the run.",
+      );
+    } finally {
+      setRunningSuiteId(null);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -114,6 +139,12 @@ export default function SuitesPage() {
           New Suite
         </button>
       </div>
+
+      {runError && (
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {runError}
+        </div>
+      )}
 
       {suites.length > 0 ? (
         <div className="card overflow-hidden">
@@ -166,6 +197,18 @@ export default function SuitesPage() {
                       className="flex items-center gap-1 justify-end"
                       onClick={(e) => e.stopPropagation()}
                     >
+                      <button
+                        onClick={() => handleRun(suite.id)}
+                        disabled={runningSuiteId === suite.id}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-drift-500/10 px-3 py-2 text-sm font-medium text-drift-300 transition-colors hover:bg-drift-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {runningSuiteId === suite.id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Play size={14} />
+                        )}
+                        {runningSuiteId === suite.id ? "Running" : "Run"}
+                      </button>
                       <button
                         onClick={() => openEdit(suite)}
                         className="p-2 rounded-lg hover:bg-surface-700 text-gray-400 hover:text-gray-200 transition-colors"
