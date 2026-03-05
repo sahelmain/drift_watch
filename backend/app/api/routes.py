@@ -165,11 +165,7 @@ def _serialize_run(run: TestRun, include_results: bool = False) -> ClientTestRun
 
 def _serialize_timeline(runs: list[TestRun]) -> list[ClientDriftPointResponse]:
     completed_runs = sorted(
-        [
-            run
-            for run in runs
-            if run.completed_at is not None and run.pass_rate is not None
-        ],
+        [run for run in runs if run.completed_at is not None and run.pass_rate is not None],
         key=lambda run: run.completed_at or run.started_at,
     )
     timeline: list[ClientDriftPointResponse] = []
