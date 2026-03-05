@@ -15,11 +15,11 @@ from sqlalchemy import select
 
 from app.config import settings
 from app.database import async_session, create_tables
+from app.models import TestSuite
 from app.sentry_setup import init_sentry
+from app.services.runs import RunService
 
 init_sentry()
-from app.models import TestSuite
-from app.services.runs import RunService
 
 logging.basicConfig(
     level=logging.INFO,
